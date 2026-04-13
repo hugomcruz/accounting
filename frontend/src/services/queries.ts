@@ -110,7 +110,7 @@ export const invoiceQueueApi = {
   },
   
   getAll: (params?: { status?: string }) =>
-    api.get<InvoiceProcessingQueue[]>('/queue/', { params }),
+    api.get<InvoiceProcessingQueue[]>('/queue', { params }),
   
   getById: (id: number) =>
     api.get<InvoiceProcessingQueue>(`/queue/${id}`),
