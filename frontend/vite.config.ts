@@ -24,6 +24,14 @@ export default defineConfig({
       '/api': {
         target: 'http://brightwaves_backend:8000',
         changeOrigin: true,
+        configure: (proxy) => {
+          proxy.on('proxyReq', (proxyReq, req) => {
+            const auth = req.headers['authorization']
+            if (auth) {
+              proxyReq.setHeader('Authorization', auth)
+            }
+          })
+        },
       },
     },
   },

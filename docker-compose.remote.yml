@@ -21,6 +21,8 @@ services:
     container_name: brightwaves_frontend
     env_file:
       - .env
+    environment:
+      - VITE_API_BASE_URL=
     ports:
       - "5173:5173"
     volumes:
