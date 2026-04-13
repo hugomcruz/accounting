@@ -9,7 +9,7 @@ from app.services.company_enrichment import CompanyEnrichmentService
 router = APIRouter(prefix="/companies", tags=["companies"])
 
 
-@router.get("/", response_model=List[Company])
+@router.get("", response_model=List[Company])
 def get_companies(
     skip: int = 0,
     limit: int = 100,
@@ -47,7 +47,7 @@ def get_company_by_nif(nif: str, db: Session = Depends(get_db)):
     return company
 
 
-@router.post("/", response_model=Company, status_code=201)
+@router.post("", response_model=Company, status_code=201)
 def create_company(company: CompanyCreate, db: Session = Depends(get_db)):
     """Create a new company"""
     # Check if NIF already exists

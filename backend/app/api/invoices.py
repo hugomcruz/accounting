@@ -27,7 +27,7 @@ def count_invoices(
     return {"count": query.count()}
 
 
-@router.get("/", response_model=List[Invoice])
+@router.get("", response_model=List[Invoice])
 def get_invoices(
     skip: int = 0,
     limit: int = 100,
@@ -210,7 +210,7 @@ async def get_invoice_file_url(invoice_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=500, detail=f"Error generating file URL: {str(e)}")
 
 
-@router.post("/", response_model=Invoice, status_code=201)
+@router.post("", response_model=Invoice, status_code=201)
 def create_invoice(invoice: InvoiceCreate, db: Session = Depends(get_db)):
     """Create a new invoice"""
     # Check if invoice number already exists

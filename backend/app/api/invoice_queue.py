@@ -261,7 +261,7 @@ async def upload_invoices_bulk(
     }
 
 
-@router.get("/", response_model=List[InvoiceProcessingQueue])
+@router.get("", response_model=List[InvoiceProcessingQueue])
 def get_queue_items(
     status: Optional[str] = None,
     skip: int = 0,
