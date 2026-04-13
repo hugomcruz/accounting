@@ -20,5 +20,11 @@ export default defineConfig({
       clientPort: 443,
       protocol: 'wss',
     },
+    proxy: {
+      '/api': {
+        target: 'http://brightwaves_backend:8000',
+        changeOrigin: true,
+      },
+    },
   },
 })
