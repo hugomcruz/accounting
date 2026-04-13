@@ -17,7 +17,7 @@ export default defineConfig({
       : [],
     hmr: {
       host: process.env.VITE_ALLOWED_HOSTS?.split(',')[0],
-      port: 443,
+      clientPort: 443,
       protocol: 'wss',
     },
   },
