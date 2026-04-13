@@ -1,0 +1,39 @@
+services:
+
+  backend:
+    image: harbor.bnov.net/bw/accounting-backend:build-2
+    restart: unless-stopped
+    container_name: brightwaves_backend
+    env_file:
+      - env
+    #ports:
+    #  - "8000:8000"
+    volumes:
+      - backend_uploads:/app/uploads
+    command: uvicorn main:app --host 0.0.0.0 --port 8000
+    networks:
+      brightwaves-net:
+        ipv4_address: 192.20.2.11
+
+  frontend:
+    image: harbor.bnov.net/bw/accounting-frontend:build-1
+    container_name: brightwaves_frontend
+    env_file:
+      - env
+    #ports:
+    #  - "5173:5173"
+    depends_on:
+      - backend
+    networks:
+      brightwaves-net:
+        ipv4_address: 192.20.2.10
+
+volumes:
+  backend_uploads:
+
+networks:
+  brightwaves-net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.2.0/24

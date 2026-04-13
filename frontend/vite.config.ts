@@ -12,11 +12,13 @@ export default defineConfig({
   },
   server: {
     port: 5173,
-    proxy: {
-      '/api': {
-        target: 'http://brightwaves_backend:8000',
-        changeOrigin: true,
-      },
+    allowedHosts: process.env.VITE_ALLOWED_HOSTS
+      ? process.env.VITE_ALLOWED_HOSTS.split(',')
+      : [],
+    hmr: {
+      host: process.env.VITE_ALLOWED_HOSTS?.split(',')[0],
+      port: 443,
+      protocol: 'wss',
     },
   },
 })
