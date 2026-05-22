@@ -7,6 +7,7 @@ from datetime import datetime
 from app.core.database import get_db
 from app.storage.storage import storage, LocalStorageBackend
 from app.services.qr_parser import PortugueseQRCodeParser
+from app.services.openai_parser import OpenAIInvoiceParser
 from app.schemas.schemas import UploadResponse, QRCodeData, ProcessInvoiceRequest
 from app.models import models
 from app.core.config import settings
@@ -58,36 +59,78 @@ async def upload_invoice(
         file_path = await storage.save(file.file, file.filename, folder="invoices")
         
         # Try to extract QR code data (for images and PDFs)
-        qr_data = None
+        qr_raw_dict = None
         raw_qr_code = None
         extraction_method = None
-        
+        ai_extracted = False
+
         file_ext = os.path.splitext(file.filename)[1].lower()
-        if file_ext in ('.png', '.jpg', '.jpeg', '.pdf'):
-            try:
-                parsed_data = None
+
+        # ── Step 1: obtain a local path to the file for analysis ──────────
+        local_path: Optional[str] = None
+        _tmp_path: Optional[str] = None
+        try:
+            if file_ext in ('.png', '.jpg', '.jpeg', '.pdf'):
                 if isinstance(storage, LocalStorageBackend):
-                    full_path = str(storage.get_full_path(file_path))
-                    parsed_data, extraction_method, raw_qr_code = PortugueseQRCodeParser.extract_and_parse(full_path, use_ocr_fallback=True)
+                    local_path = str(storage.get_full_path(file_path))
                 elif hasattr(storage, 'client'):
-                    # S3: download to temp file, extract, then delete
                     with tempfile.NamedTemporaryFile(delete=False, suffix=file_ext) as tmp_file:
                         storage.client.download_fileobj(storage.bucket_name, file_path, tmp_file)
                         tmp_file.flush()
-                        parsed_data, extraction_method, raw_qr_code = PortugueseQRCodeParser.extract_and_parse(tmp_file.name, use_ocr_fallback=True)
-                    os.unlink(tmp_file.name)
+                        _tmp_path = tmp_file.name
+                    local_path = _tmp_path
+        except Exception as e:
+            print(f"File download for analysis error: {e}")
 
-                if parsed_data:
-                    qr_data = QRCodeData(**parsed_data)
+        # ── Step 2: QR / ATCUD parsing ─────────────────────────────────────
+        if local_path:
+            try:
+                qr_raw_dict, extraction_method, raw_qr_code = PortugueseQRCodeParser.extract_and_parse(
+                    local_path, use_ocr_fallback=True
+                )
             except Exception as e:
                 print(f"QR extraction error: {e}")
-        
+
+        # ── Step 3: OpenAI vision parsing ──────────────────────────────────
+        ai_raw_dict = None
+        if local_path and settings.OPENAI_API_KEY:
+            try:
+                ai_raw_dict = OpenAIInvoiceParser.parse(
+                    file_path=local_path,
+                    qr_data=qr_raw_dict,
+                    api_key=settings.OPENAI_API_KEY,
+                )
+            except Exception as e:
+                print(f"OpenAI parsing error: {e}")
+
+        # Clean up temp file after analysis
+        if _tmp_path:
+            try:
+                os.unlink(_tmp_path)
+            except OSError:
+                pass
+
+        # ── Step 4: merge results ──────────────────────────────────────────
+        merged_dict: Optional[dict] = None
+        if ai_raw_dict or qr_raw_dict:
+            merged_dict = OpenAIInvoiceParser.merge(ai_raw_dict, qr_raw_dict)
+            ai_extracted = ai_raw_dict is not None
+
+        qr_data = QRCodeData(**merged_dict) if merged_dict else None
+
+        # Update extraction_method label to reflect AI involvement
+        if ai_extracted:
+            extraction_method = f"{extraction_method}+ai" if extraction_method else "ai"
+
+        # ── Step 5: build response message ────────────────────────────────
         message = "File uploaded successfully"
         if qr_data:
-            if extraction_method == 'qr':
-                message += " - QR code detected and parsed"
-            elif extraction_method == 'ocr':
+            if "qr" in (extraction_method or ""):
+                message += " - QR/ATCUD code detected and parsed"
+            elif "ocr" in (extraction_method or ""):
                 message += " - QR not found, data extracted via OCR"
+            if ai_extracted:
+                message += " with AI enrichment"
 
         file_url = await storage.get_url(file_path)
 
@@ -98,7 +141,8 @@ async def upload_invoice(
             qr_data=qr_data,
             raw_qr_code=raw_qr_code,
             extraction_method=extraction_method,
-            message=message
+            ai_extracted=ai_extracted,
+            message=message,
         )
     
     except Exception as e:

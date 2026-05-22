@@ -129,6 +129,12 @@ export default {
     errorEmpty: 'Please enter username and password',
     errorInvalid: 'Invalid username or password',
   },
+  session: {
+    idleTitle: 'Are you still there?',
+    idleMessage: 'You have been inactive for a while. You will be logged out automatically soon.',
+    stayActive: 'Stay logged in',
+    logoutNow: 'Log out',
+  },
   dashboard: {
     title: 'Dashboard',
     welcome: 'Welcome to Bright Waves Finance',

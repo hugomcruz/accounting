@@ -220,7 +220,11 @@ class Invoice(InvoiceBase):
 # QR Code data schema
 class QRCodeData(BaseModel):
     model_config = {"extra": "ignore"}
-    
+
+    # Human-readable names (populated by AI parser)
+    nome_emitente: Optional[str] = None
+    nome_adquirente: Optional[str] = None
+
     nif_emitente: Optional[str] = None
     nif_adquirente: Optional[str] = None
     pais_adquirente: Optional[str] = None
@@ -250,7 +254,8 @@ class UploadResponse(BaseModel):
     file_url: Optional[str] = None
     qr_data: Optional[QRCodeData] = None
     raw_qr_code: Optional[str] = None
-    extraction_method: Optional[str] = None  # 'qr', 'ocr', or None
+    extraction_method: Optional[str] = None  # 'qr', 'ocr', 'qr+ai', 'ai', 'ocr+ai', or None
+    ai_extracted: bool = False
     message: str
 
 

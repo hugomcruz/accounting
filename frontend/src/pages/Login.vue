@@ -23,6 +23,7 @@ async function handleLogin() {
   error.value = ''
   try {
     await auth.login(username.value, password.value)
+    auth.setupSession()
     router.push('/')
   } catch (err: unknown) {
     const axiosError = err as { response?: { data?: { detail?: string } } }

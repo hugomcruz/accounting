@@ -28,13 +28,15 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Handle unauthorized - clear auth and redirect to login
-      localStorage.removeItem('auth_token');
-      localStorage.removeItem('auth_user');
-      window.location.href = '/login';
+      // Import lazily to avoid circular dependency
+      import('@/stores/auth').then(({ useAuthStore }) => {
+        const auth = useAuthStore()
+        auth.logout()
+      })
+      window.location.href = '/login'
     }
-    return Promise.reject(error);
+    return Promise.reject(error)
   }
-);
+)
 
 export default api;

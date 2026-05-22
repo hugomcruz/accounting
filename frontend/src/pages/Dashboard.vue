@@ -7,9 +7,12 @@ import { FileText, Building2, Database, Clock } from 'lucide-vue-next'
 import Card from '@/components/ui/Card.vue'
 import { invoicesApi, companiesApi, saftApi, invoiceQueueApi } from '@/services/queries'
 import { formatCurrency, formatDate } from '@/lib/utils'
+import { useAuthStore } from '@/stores/auth'
 
 const { t } = useI18n()
 const router = useRouter()
+const auth = useAuthStore()
+const isAdminOrFinance = computed(() => ['admin', 'finance'].includes(auth.role))
 
 const { data: invoicesData } = useQuery({
   queryKey: ['invoices-recent'],
@@ -37,6 +40,7 @@ const { data: companiesData } = useQuery({
 
 const { data: saftData } = useQuery({
   queryKey: ['saft-summary'],
+  enabled: isAdminOrFinance,
   queryFn: async () => {
     const response = await saftApi.getImports()
     return response.data
@@ -45,6 +49,7 @@ const { data: saftData } = useQuery({
 
 const { data: queueData } = useQuery({
   queryKey: ['queue-summary'],
+  enabled: isAdminOrFinance,
   queryFn: async () => {
     const response = await invoiceQueueApi.getAll({ status: 'needs_review' })
     return response.data
@@ -87,7 +92,7 @@ const pendingReview = computed(() => queueData.value?.length ?? 0)
         </div>
       </Card>
 
-      <Card>
+      <Card v-if="isAdminOrFinance">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-600">{{ t('dashboard.saftImports') }}</p>
@@ -97,7 +102,7 @@ const pendingReview = computed(() => queueData.value?.length ?? 0)
         </div>
       </Card>
 
-      <Card>
+      <Card v-if="isAdminOrFinance">
         <div class="flex items-center justify-between">
           <div>
             <p class="text-sm text-gray-600">{{ t('dashboard.pendingReview') }}</p>

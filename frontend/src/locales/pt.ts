@@ -129,6 +129,12 @@ export default {
     errorEmpty: 'Introduza o utilizador e a palavra-passe',
     errorInvalid: 'Utilizador ou palavra-passe inválidos',
   },
+  session: {
+    idleTitle: 'Ainda está aí?',
+    idleMessage: 'Esteve inativo durante algum tempo. A sessão será encerrada automaticamente em breve.',
+    stayActive: 'Continuar sessão',
+    logoutNow: 'Terminar sessão',
+  },
   dashboard: {
     title: 'Painel',
     welcome: 'Bem-vindo ao Bright Waves Finance',

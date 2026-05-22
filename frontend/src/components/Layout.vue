@@ -134,10 +134,47 @@ function logout() {
   auth.logout()
   router.push('/login')
 }
+
+function stayActive() {
+  auth.stayActive()
+}
 </script>
 
 <template>
   <div class="flex h-screen overflow-hidden bg-gray-50">
+
+    <!-- ── Idle warning overlay ─────────────────────────────────────── -->
+    <Transition name="fade">
+      <div
+        v-if="auth.showIdleWarning"
+        class="fixed inset-0 z-[100] flex items-center justify-center bg-black/50"
+      >
+        <div class="bg-white rounded-xl shadow-2xl p-8 max-w-sm w-full mx-4 text-center">
+          <div class="flex items-center justify-center w-14 h-14 rounded-full bg-amber-100 mx-auto mb-4">
+            <svg class="h-7 w-7 text-amber-600" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round"
+                d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+            </svg>
+          </div>
+          <h2 class="text-lg font-semibold text-gray-900 mb-2">{{ t('session.idleTitle') }}</h2>
+          <p class="text-sm text-gray-500 mb-6">{{ t('session.idleMessage') }}</p>
+          <div class="flex gap-3 justify-center">
+            <button
+              class="px-4 py-2 rounded-lg text-sm font-medium bg-primary-600 text-white hover:bg-primary-700 transition-colors"
+              @click="stayActive"
+            >
+              {{ t('session.stayActive') }}
+            </button>
+            <button
+              class="px-4 py-2 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-100 transition-colors"
+              @click="logout"
+            >
+              {{ t('session.logoutNow') }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </Transition>
     <!-- Sidebar -->
     <aside
       :class="[
@@ -289,3 +326,14 @@ function logout() {
     </div>
   </div>
 </template>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>
